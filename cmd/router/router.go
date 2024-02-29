@@ -43,6 +43,7 @@ func Create() *gin.Engine {
 		d.GET("/", dishesController.GetAll)
 		d.GET("/random", dishesController.GetRandom)
 		d.GET("/:id", dishesController.GetById)
+		d.GET("/details/:id", dishesController.GetDetailsById)
 		d.DELETE("/:id", dishesController.Delete)
 		d.GET("/query", dishesController.GetPage)
 	}

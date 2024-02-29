@@ -44,7 +44,7 @@ func (c *DishesController) Create(ctx *gin.Context) {
 		return
 	}
 
-	res, err := c.dishesService.Create(body.KitchenId, body.Name, body.Ingredients, *body.Duration, *body.Rating, body.Images)
+	res, err := c.dishesService.Create(body.KitchenId, body.Name, body.IngredientIds, *body.Duration, *body.Rating, body.Images)
 
 	if err != nil {
 		ctx.JSON(
@@ -82,6 +82,28 @@ func (c *DishesController) GetById(ctx *gin.Context) {
 	}
 
 	res, err := c.dishesService.GetById(id)
+	if err != nil {
+		ctx.JSON(
+			err.(*services.ServiceError).HttpStatus(),
+			api_error.New(err.(*services.ServiceError).HttpStatus(), err),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *DishesController) GetDetailsById(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if id == "" {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api_error.New(http.StatusBadRequest, errors.New("missing id param")),
+		)
+		return
+	}
+
+	res, err := c.dishesService.GetDetailsById(id)
 	if err != nil {
 		ctx.JSON(
 			err.(*services.ServiceError).HttpStatus(),

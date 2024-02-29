@@ -106,3 +106,28 @@ func (s *DishesService) GetPage(page int, pageSize int, sort int) ([]domain.Dish
 
 	return res, nil
 }
+
+func (s *DishesService) GetDetailsById(id string) (*DishDetails, error) {
+	res, err := s.dishesRepository.GetById(id)
+
+	if err != nil {
+		return &DishDetails{},
+			services.NewServiceError(services.RepositoryError, err.Error())
+	}
+
+	return s.Details(res)
+}
+
+func (s *DishesService) Details(dish domain.Dish) (*DishDetails, error) {
+	ingredients, err := s.ingredientsRepository.GetManyById(dish.IngredientIds)
+	if err != nil {
+		return nil, services.NewServiceError(services.RepositoryError, err.Error())
+	}
+
+	kitchen, err := s.kitchensRepository.GetById(dish.KitchenId)
+	if err != nil {
+		return nil, services.NewServiceError(services.RepositoryError, err.Error())
+	}
+
+	return NewDishDetails(kitchen, dish.Name, ingredients, dish.Duration, dish.Rating, dish.Images), nil
+}
