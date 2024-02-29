@@ -7,6 +7,7 @@ import (
 	"github.com/mineamihai2001/fm/internal/mongo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type IngredientsRepository struct {
@@ -70,4 +71,47 @@ func (r *IngredientsRepository) Delete(id string) (bool, error) {
 	}
 
 	return res.DeletedCount > 0, nil
+}
+
+func (r *IngredientsRepository) DeleteMany(ids []string) (int, error) {
+	objectIds := make([]primitive.ObjectID, len(ids))
+
+	for _, id := range ids {
+		current, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return 0, err
+		}
+		objectIds = append(objectIds, current)
+	}
+
+	res, err := r.dataSource.DeleteMany(bson.M{"_id": bson.M{"$in": objectIds}})
+	if err != nil {
+		return 0, err
+	}
+
+	return int(res.DeletedCount), nil
+}
+
+func (r *IngredientsRepository) GetInterval(limit int, start int, sort int) ([]domain.Ingredient, error) {
+	var opts *options.FindOptions
+	if sort == 1 || sort == -1 {
+		opts = options.Find().SetLimit(int64(limit)).SetSkip(int64(start)).SetSort(bson.D{{Key: "name", Value: sort}})
+	} else {
+		opts = options.Find().SetLimit(int64(limit)).SetSkip(int64(start))
+	}
+
+	return r.dataSource.Find(bson.D{}, opts)
+}
+
+func (r *IngredientsRepository) GetByName(name string) ([]domain.Ingredient, error) {
+	return r.dataSource.Find(bson.D{{
+		Key: "$text",
+		Value: bson.D{{
+			Key:   "$search",
+			Value: name,
+		},
+		},
+	},
+	},
+	)
 }

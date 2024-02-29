@@ -18,10 +18,13 @@ func Create() *gin.Engine {
 	i := v1.Group("/ingredients")
 	{
 		ingredientsController := controllers.NewIngredientsController()
-		i.POST("/", ingredientsController.Create)
 		i.GET("/", ingredientsController.GetAll)
 		i.GET("/:id", ingredientsController.GetById)
+		i.GET("/query", ingredientsController.GetPage)
+		i.POST("/", ingredientsController.Create)
+		i.POST("/query", ingredientsController.GetByName)
 		i.DELETE("/:id", ingredientsController.Delete)
+		i.DELETE("/", ingredientsController.DeleteMany)
 	}
 
 	k := v1.Group("/kitchens")
