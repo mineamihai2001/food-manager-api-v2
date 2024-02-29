@@ -49,15 +49,15 @@ func (s *IngredientsService) GetManyById(ids []string) ([]domain.Ingredient, err
 	return res, nil
 }
 
-func (s *IngredientsService) GetAll() (*[]domain.Ingredient, error) {
+func (s *IngredientsService) GetAll() ([]domain.Ingredient, error) {
 	res, err := s.repository.GetAll()
 
 	if err != nil {
-		return &[]domain.Ingredient{},
-			services.NewServiceError(services.InternalServerError, err.Error())
+		return []domain.Ingredient{},
+			services.NewServiceError(services.RepositoryError, err.Error())
 	}
 
-	return &res, nil
+	return res, nil
 }
 
 func (s *IngredientsService) Delete(id string) (bool, error) {
@@ -65,7 +65,43 @@ func (s *IngredientsService) Delete(id string) (bool, error) {
 
 	if err != nil {
 		return false,
-			services.NewServiceError(services.InternalServerError, err.Error())
+			services.NewServiceError(services.RepositoryError, err.Error())
+	}
+
+	return res, nil
+}
+
+func (s *IngredientsService) DeleteMany(ids []string) (int, error) {
+	res, err := s.repository.DeleteMany(ids)
+
+	if err != nil {
+		return 0,
+			services.NewServiceError(services.RepositoryError, err.Error())
+	}
+
+	return res, nil
+}
+
+func (s *IngredientsService) GetPage(page int, pageSize int, sort int) ([]domain.Ingredient, error) {
+	maxPageSize := 100
+	if pageSize > maxPageSize {
+		pageSize = maxPageSize
+	}
+
+	res, err := s.repository.GetInterval(pageSize, page*pageSize, sort)
+
+	if err != nil {
+		return []domain.Ingredient{}, services.NewServiceError(services.RepositoryError, err.Error())
+	}
+
+	return res, nil
+}
+
+func (s *IngredientsService) GetByName(name string) ([]domain.Ingredient, error) {
+	res, err := s.repository.GetByName(name)
+
+	if err != nil {
+		return []domain.Ingredient{}, services.NewServiceError(services.RepositoryError, err.Error())
 	}
 
 	return res, nil
