@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -92,6 +93,20 @@ func (c *DishesController) GetById(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+func (c *DishesController) GetRandom(ctx *gin.Context) {
+	res, err := c.dishesService.GetRandom()
+
+	if err != nil {
+		ctx.JSON(
+			err.(*services.ServiceError).HttpStatus(),
+			api_error.New(err.(*services.ServiceError).HttpStatus(), err),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}
+
 func (c *DishesController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if id == "" {
@@ -114,4 +129,39 @@ func (c *DishesController) Delete(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"deleted": res,
 	})
+}
+
+func (c *DishesController) GetPage(ctx *gin.Context) {
+	query, err := middleware.Query[dtos.GetDishesPage](ctx)
+	if err != nil {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api_error.New(http.StatusBadRequest, err),
+		)
+		return
+	}
+
+	page, pageErr := strconv.Atoi(query.Page)
+	sort, sortErr := strconv.Atoi(query.Sort)
+	pageSize, pageSizeErr := strconv.Atoi(query.PageSize)
+
+	if pageErr != nil || sortErr != nil || pageSizeErr != nil {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api_error.New(http.StatusBadRequest, errors.New("type error, query parameters invalid type. Page, sort and pageSize must be of type int")),
+		)
+		return
+	}
+
+	res, err := c.dishesService.GetPage(page, pageSize, sort)
+
+	if err != nil {
+		ctx.JSON(
+			err.(*services.ServiceError).HttpStatus(),
+			api_error.New(err.(*services.ServiceError).HttpStatus(), err),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }

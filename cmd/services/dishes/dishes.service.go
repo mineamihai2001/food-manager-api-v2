@@ -80,3 +80,29 @@ func (s *DishesService) Delete(id string) (bool, error) {
 
 	return res, nil
 }
+
+func (s *DishesService) GetRandom() (*domain.Dish, error) {
+	res, err := s.dishesRepository.GetRandom()
+
+	if err != nil {
+		return nil,
+			services.NewServiceError(services.InternalServerError, err.Error())
+	}
+
+	return &res, nil
+}
+
+func (s *DishesService) GetPage(page int, pageSize int, sort int) ([]domain.Dish, error) {
+	maxPageSize := 100
+	if pageSize > maxPageSize {
+		pageSize = maxPageSize
+	}
+
+	res, err := s.dishesRepository.GetInterval(pageSize, page*pageSize, sort)
+
+	if err != nil {
+		return []domain.Dish{}, services.NewServiceError(services.RepositoryError, err.Error())
+	}
+
+	return res, nil
+}

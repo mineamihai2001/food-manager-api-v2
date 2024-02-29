@@ -19,12 +19,12 @@ func Create() *gin.Engine {
 	{
 		ingredientsController := controllers.NewIngredientsController()
 		i.GET("/", ingredientsController.GetAll)
-		i.GET("/:id", ingredientsController.GetById)
-		i.GET("/query", ingredientsController.GetPage)
 		i.POST("/", ingredientsController.Create)
-		i.POST("/query", ingredientsController.GetByName)
-		i.DELETE("/:id", ingredientsController.Delete)
 		i.DELETE("/", ingredientsController.DeleteMany)
+		i.GET("/:id", ingredientsController.GetById)
+		i.DELETE("/:id", ingredientsController.Delete)
+		i.GET("/query", ingredientsController.GetPage)
+		i.POST("/query", ingredientsController.GetByName)
 	}
 
 	k := v1.Group("/kitchens")
@@ -41,8 +41,10 @@ func Create() *gin.Engine {
 		dishesController := controllers.NewDishesController()
 		d.POST("/", dishesController.Create)
 		d.GET("/", dishesController.GetAll)
+		d.GET("/random", dishesController.GetRandom)
 		d.GET("/:id", dishesController.GetById)
 		d.DELETE("/:id", dishesController.Delete)
+		d.GET("/query", dishesController.GetPage)
 	}
 
 	return router

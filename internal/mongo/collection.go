@@ -67,3 +67,17 @@ func (coll *Collection[T]) DeleteOne(filter interface{}, opts ...*options.Delete
 func (coll *Collection[T]) DeleteMany(filter interface{}, opts ...*options.DeleteOptions) (*mongo.DeleteResult, error) {
 	return coll.collection.DeleteMany(coll.ctx, filter, opts...)
 }
+
+func (coll *Collection[T]) Aggregate(pipeline interface{}, opts ...*options.AggregateOptions) ([]T, error) {
+	cursor, err := coll.collection.Aggregate(coll.ctx, pipeline, opts...)
+	if err != nil {
+		return nil, err
+	}
+
+	var result []T = make([]T, 0)
+	if err = cursor.All(coll.ctx, &result); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
