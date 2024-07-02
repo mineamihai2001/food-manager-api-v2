@@ -31,8 +31,8 @@ func (r *DishesRepository) GetById(id string) (domain.Dish, error) {
 	return r.dataSource.FindOne(bson.D{{Key: "_id", Value: objectId}})
 }
 
-func (r *DishesRepository) GetAll() ([]domain.Dish, error) {
-	return r.dataSource.Find(bson.D{})
+func (r *DishesRepository) GetAll(kitchenId string) ([]domain.Dish, error) {
+	return r.dataSource.Find(bson.D{{Key: "kitchenId", Value: kitchenId}})
 }
 
 func (r *DishesRepository) Create(d domain.Dish) (domain.Dish, error) {
@@ -60,25 +60,37 @@ func (r *DishesRepository) Delete(id string) (bool, error) {
 	return res.DeletedCount > 0, nil
 }
 
-func (r *DishesRepository) GetRandom() (domain.Dish, error) {
-	res, err := r.dataSource.Aggregate(mongo_driver.Pipeline{bson.D{{
-		Key: "$sample", Value: bson.D{
+func (r *DishesRepository) GetRandom(kitchenId string) (domain.Dish, error) {
+	matchStage := bson.D{{
+		Key: "$match", Value: bson.D{
 			{
-				Key:   "size",
-				Value: 1,
+				Key:   "kitchenId",
+				Value: kitchenId,
 			},
 		},
-	},
-	}})
+	}}
+
+	sampleStage := bson.D{
+		{
+			Key: "$sample", Value: bson.D{
+				{
+					Key:   "size",
+					Value: 1,
+				},
+			},
+		},
+	}
+
+	res, err := r.dataSource.Aggregate(mongo_driver.Pipeline{matchStage, sampleStage})
 
 	if len(res) == 0 {
-		return domain.Dish{}, nil
+		return domain.Dish{Name: "not found"}, nil
 	}
 
 	return res[0], err
 }
 
-func (r *DishesRepository) GetInterval(limit int, start int, sort int) ([]domain.Dish, error) {
+func (r *DishesRepository) GetInterval(limit int, start int, sort int, kitchenId string) ([]domain.Dish, error) {
 	var opts *options.FindOptions
 	if sort == 1 || sort == -1 {
 		opts = options.Find().SetLimit(int64(limit)).SetSkip(int64(start)).SetSort(bson.D{{Key: "name", Value: sort}})
@@ -86,5 +98,9 @@ func (r *DishesRepository) GetInterval(limit int, start int, sort int) ([]domain
 		opts = options.Find().SetLimit(int64(limit)).SetSkip(int64(start))
 	}
 
-	return r.dataSource.Find(bson.D{}, opts)
+	return r.dataSource.Find(bson.D{{Key: "kitchenId", Value: kitchenId}}, opts)
+}
+
+func (r *DishesRepository) GetByIngredientIds(ingredientIds []string) ([]domain.Dish, error) {
+	return r.dataSource.Find(bson.M{"ingredientIds": bson.M{"$in": ingredientIds}})
 }

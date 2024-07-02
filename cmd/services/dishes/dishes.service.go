@@ -59,8 +59,8 @@ func (s *DishesService) GetById(id string) (*domain.Dish, error) {
 	return &res, nil
 }
 
-func (s *DishesService) GetAll() (*[]domain.Dish, error) {
-	res, err := s.dishesRepository.GetAll()
+func (s *DishesService) GetAll(kitchenId string) (*[]domain.Dish, error) {
+	res, err := s.dishesRepository.GetAll(kitchenId)
 
 	if err != nil {
 		return &[]domain.Dish{},
@@ -81,8 +81,8 @@ func (s *DishesService) Delete(id string) (bool, error) {
 	return res, nil
 }
 
-func (s *DishesService) GetRandom() (*domain.Dish, error) {
-	res, err := s.dishesRepository.GetRandom()
+func (s *DishesService) GetRandom(kitchenId string) (*domain.Dish, error) {
+	res, err := s.dishesRepository.GetRandom(kitchenId)
 
 	if err != nil {
 		return nil,
@@ -92,16 +92,27 @@ func (s *DishesService) GetRandom() (*domain.Dish, error) {
 	return &res, nil
 }
 
-func (s *DishesService) GetPage(page int, pageSize int, sort int) ([]domain.Dish, error) {
+func (s *DishesService) GetPage(page int, pageSize int, sort int, kitchenId string) ([]domain.Dish, error) {
 	maxPageSize := 100
 	if pageSize > maxPageSize {
 		pageSize = maxPageSize
 	}
 
-	res, err := s.dishesRepository.GetInterval(pageSize, page*pageSize, sort)
+	res, err := s.dishesRepository.GetInterval(pageSize, page*pageSize, sort, kitchenId)
 
 	if err != nil {
 		return []domain.Dish{}, services.NewServiceError(services.RepositoryError, err.Error())
+	}
+
+	return res, nil
+}
+
+func (s *DishesService) GetByIngredientIds(ids []string) ([]domain.Dish, error) {
+	res, err := s.dishesRepository.GetByIngredientIds(ids)
+
+	if err != nil {
+		return []domain.Dish{},
+			services.NewServiceError(services.RepositoryError, err.Error())
 	}
 
 	return res, nil
@@ -116,6 +127,27 @@ func (s *DishesService) GetDetailsById(id string) (*DishDetails, error) {
 	}
 
 	return s.Details(res)
+}
+
+func (s *DishesService) GetDetailsByIngredientIds(ids []string) ([]*DishDetails, error) {
+	res, err := s.dishesRepository.GetByIngredientIds(ids)
+
+	if err != nil {
+		return []*DishDetails{},
+			services.NewServiceError(services.RepositoryError, err.Error())
+	}
+
+	detailsResult := make([]*DishDetails, len(res))
+	for i, doc := range res {
+		details, err := s.Details(doc)
+		if err != nil {
+			return []*DishDetails{},
+				services.NewServiceError(services.RepositoryError, err.Error())
+		}
+		detailsResult[i] = details
+	}
+
+	return detailsResult, nil
 }
 
 func (s *DishesService) Details(dish domain.Dish) (*DishDetails, error) {

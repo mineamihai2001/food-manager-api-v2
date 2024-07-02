@@ -48,8 +48,12 @@ func (coll *Collection[T]) InsertOne(document T, opts ...*options.InsertOneOptio
 	return coll.collection.InsertOne(coll.ctx, document, opts...)
 }
 
-func (coll *Collection[T]) InsertMany(documents []interface{}, opts ...*options.InsertManyOptions) (*mongo.InsertManyResult, error) {
-	return coll.collection.InsertMany(coll.ctx, documents, opts...)
+func (coll *Collection[T]) InsertMany(documents []T, opts ...*options.InsertManyOptions) (*mongo.InsertManyResult, error) {
+	interfaces := make([]interface{}, len(documents))
+	for i := range documents {
+		interfaces[i] = documents[i]
+	}
+	return coll.collection.InsertMany(coll.ctx, interfaces, opts...)
 }
 
 func (coll *Collection[T]) UpdateOne(filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {

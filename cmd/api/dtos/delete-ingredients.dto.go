@@ -1,5 +1,5 @@
 package dtos
 
-type DeleteIngredients struct {
+type DeleteIngredientsDto struct {
 	Ids []string `json:"ids" binding:"required"`
 }

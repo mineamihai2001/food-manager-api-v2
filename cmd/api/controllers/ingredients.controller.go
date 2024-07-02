@@ -57,6 +57,29 @@ func (c *IngredientsController) Create(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+func (c *IngredientsController) CreateMany(ctx *gin.Context) {
+	body, err := middleware.Body[dtos.CreateManyIngredientsDto](ctx)
+	if err != nil {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api_error.New(http.StatusBadRequest, err),
+		)
+		return
+	}
+
+	res, err := c.ingredientsService.CreateMany(body.Names)
+
+	if err != nil {
+		ctx.JSON(
+			err.(*services.ServiceError).HttpStatus(),
+			api_error.New(err.(*services.ServiceError).HttpStatus(), err),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}
+
 func (c *IngredientsController) GetAll(ctx *gin.Context) {
 	res, err := c.ingredientsService.GetAll()
 
@@ -118,7 +141,7 @@ func (c *IngredientsController) Delete(ctx *gin.Context) {
 }
 
 func (c *IngredientsController) DeleteMany(ctx *gin.Context) {
-	body, err := middleware.Body[dtos.DeleteIngredients](ctx)
+	body, err := middleware.Body[dtos.DeleteIngredientsDto](ctx)
 	if err != nil {
 		ctx.JSON(
 			http.StatusBadRequest,
@@ -142,7 +165,7 @@ func (c *IngredientsController) DeleteMany(ctx *gin.Context) {
 }
 
 func (c *IngredientsController) GetPage(ctx *gin.Context) {
-	query, err := middleware.Query[dtos.GetIngredientsPage](ctx)
+	query, err := middleware.Query[dtos.GetIngredientsPageDto](ctx)
 	if err != nil {
 		ctx.JSON(
 			http.StatusBadRequest,
@@ -177,7 +200,7 @@ func (c *IngredientsController) GetPage(ctx *gin.Context) {
 }
 
 func (c *IngredientsController) GetByName(ctx *gin.Context) {
-	query, err := middleware.Body[dtos.GetIngredientsName](ctx)
+	query, err := middleware.Body[dtos.GetIngredientsNameDto](ctx)
 	if err != nil {
 		ctx.JSON(
 			http.StatusBadRequest,

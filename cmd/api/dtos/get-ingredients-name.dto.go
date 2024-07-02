@@ -1,5 +1,5 @@
 package dtos
 
-type GetIngredientsName struct {
+type GetIngredientsNameDto struct {
 	Name string `form:"name" binding:"required"`
 }

@@ -59,6 +59,19 @@ func (r *IngredientsRepository) Create(i domain.Ingredient) (domain.Ingredient, 
 	return created, nil
 }
 
+func (r *IngredientsRepository) CreateMany(i []domain.Ingredient) ([]domain.Ingredient, error) {
+	res, err := r.dataSource.InsertMany(i)
+	if err != nil {
+		return []domain.Ingredient{}, err
+	}
+
+	created := i
+	for i := range created {
+		created[i].Id = res.InsertedIDs[i].(primitive.ObjectID).Hex()
+	}
+	return created, nil
+}
+
 func (r *IngredientsRepository) Delete(id string) (bool, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {

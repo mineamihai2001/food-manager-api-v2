@@ -58,7 +58,7 @@ func (c *DishesController) Create(ctx *gin.Context) {
 }
 
 func (c *DishesController) GetAll(ctx *gin.Context) {
-	res, err := c.dishesService.GetAll()
+	res, err := c.dishesService.GetAll(ctx.GetString("kitchenId"))
 
 	if err != nil {
 		ctx.JSON(
@@ -116,7 +116,7 @@ func (c *DishesController) GetDetailsById(ctx *gin.Context) {
 }
 
 func (c *DishesController) GetRandom(ctx *gin.Context) {
-	res, err := c.dishesService.GetRandom()
+	res, err := c.dishesService.GetRandom(ctx.GetString("kitchenId"))
 
 	if err != nil {
 		ctx.JSON(
@@ -154,7 +154,7 @@ func (c *DishesController) Delete(ctx *gin.Context) {
 }
 
 func (c *DishesController) GetPage(ctx *gin.Context) {
-	query, err := middleware.Query[dtos.GetDishesPage](ctx)
+	query, err := middleware.Query[dtos.GetDishesPageDto](ctx)
 	if err != nil {
 		ctx.JSON(
 			http.StatusBadRequest,
@@ -175,7 +175,53 @@ func (c *DishesController) GetPage(ctx *gin.Context) {
 		return
 	}
 
-	res, err := c.dishesService.GetPage(page, pageSize, sort)
+	res, err := c.dishesService.GetPage(page, pageSize, sort, ctx.GetString("kitchenId"))
+
+	if err != nil {
+		ctx.JSON(
+			err.(*services.ServiceError).HttpStatus(),
+			api_error.New(err.(*services.ServiceError).HttpStatus(), err),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *DishesController) GetByIngredientIds(ctx *gin.Context) {
+	body, err := middleware.Body[dtos.GetDishesByIngredientsDto](ctx)
+	if err != nil {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api_error.New(http.StatusBadRequest, err),
+		)
+		return
+	}
+
+	res, err := c.dishesService.GetByIngredientIds(body.IngredientIds)
+
+	if err != nil {
+		ctx.JSON(
+			err.(*services.ServiceError).HttpStatus(),
+			api_error.New(err.(*services.ServiceError).HttpStatus(), err),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *DishesController) GetDetailsByIngredientIds(ctx *gin.Context) {
+	body, err := middleware.Body[dtos.GetDishesByIngredientsDto](ctx)
+	if err != nil {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api_error.New(http.StatusBadRequest, err),
+		)
+		return
+	}
+
+	res, err := c.dishesService.GetDetailsByIngredientIds(body.IngredientIds)
 
 	if err != nil {
 		ctx.JSON(

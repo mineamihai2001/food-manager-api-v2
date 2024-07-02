@@ -27,6 +27,21 @@ func (s *IngredientsService) Create(name string) (*domain.Ingredient, error) {
 	return &res, nil
 }
 
+func (s *IngredientsService) CreateMany(names []string) ([]domain.Ingredient, error) {
+	ingredients := make([]domain.Ingredient, len(names))
+	for i, name := range names {
+		ingredients[i] = domain.NewIngredient(name)
+	}
+	res, err := s.repository.CreateMany(ingredients)
+
+	if err != nil {
+		return []domain.Ingredient{},
+			services.NewServiceError(services.InternalServerError, err.Error())
+	}
+
+	return res, nil
+}
+
 func (s *IngredientsService) GetById(id string) (*domain.Ingredient, error) {
 	res, err := s.repository.GetById(id)
 
