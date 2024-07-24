@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/mineamihai2001/fm/internal/domain"
+	"github.com/mineamihai2001/fm/internal/domain/model"
 	"github.com/mineamihai2001/fm/internal/infrastructure/mongo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -11,36 +11,36 @@ import (
 )
 
 type IngredientsRepository struct {
-	dataSource *mongo.Collection[domain.Ingredient]
+	dataSource *mongo.Collection[model.Ingredient]
 }
 
 func NewIngredientsRepository() *IngredientsRepository {
 	client := mongo.GetInstance("fm", context.Background())
 
 	return &IngredientsRepository{
-		dataSource: mongo.GetCollection[domain.Ingredient](client, "ingredients"),
+		dataSource: mongo.GetCollection[model.Ingredient](client, "ingredients"),
 	}
 }
 
-func (r *IngredientsRepository) GetById(id string) (domain.Ingredient, error) {
+func (r *IngredientsRepository) GetById(id string) (model.Ingredient, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return domain.Ingredient{}, err
+		return model.Ingredient{}, err
 	}
 	return r.dataSource.FindOne(bson.D{{Key: "_id", Value: objectId}})
 }
 
-func (r *IngredientsRepository) GetAll() ([]domain.Ingredient, error) {
+func (r *IngredientsRepository) GetAll() ([]model.Ingredient, error) {
 	return r.dataSource.Find(bson.D{})
 }
 
-func (r *IngredientsRepository) GetManyById(ids []string) ([]domain.Ingredient, error) {
+func (r *IngredientsRepository) GetManyById(ids []string) ([]model.Ingredient, error) {
 	objectIds := make([]primitive.ObjectID, len(ids))
 
 	for _, id := range ids {
 		current, err := primitive.ObjectIDFromHex(id)
 		if err != nil {
-			return []domain.Ingredient{}, err
+			return []model.Ingredient{}, err
 		}
 		objectIds = append(objectIds, current)
 	}
@@ -48,10 +48,10 @@ func (r *IngredientsRepository) GetManyById(ids []string) ([]domain.Ingredient, 
 	return r.dataSource.Find(bson.M{"_id": bson.M{"$in": objectIds}})
 }
 
-func (r *IngredientsRepository) Create(i domain.Ingredient) (domain.Ingredient, error) {
+func (r *IngredientsRepository) Create(i model.Ingredient) (model.Ingredient, error) {
 	res, err := r.dataSource.InsertOne(i)
 	if err != nil {
-		return domain.Ingredient{}, err
+		return model.Ingredient{}, err
 	}
 
 	created := i
@@ -59,10 +59,10 @@ func (r *IngredientsRepository) Create(i domain.Ingredient) (domain.Ingredient, 
 	return created, nil
 }
 
-func (r *IngredientsRepository) CreateMany(i []domain.Ingredient) ([]domain.Ingredient, error) {
+func (r *IngredientsRepository) CreateMany(i []model.Ingredient) ([]model.Ingredient, error) {
 	res, err := r.dataSource.InsertMany(i)
 	if err != nil {
-		return []domain.Ingredient{}, err
+		return []model.Ingredient{}, err
 	}
 
 	created := i
@@ -105,7 +105,7 @@ func (r *IngredientsRepository) DeleteMany(ids []string) (int, error) {
 	return int(res.DeletedCount), nil
 }
 
-func (r *IngredientsRepository) GetInterval(limit int, start int, sort int) ([]domain.Ingredient, error) {
+func (r *IngredientsRepository) GetInterval(limit int, start int, sort int) ([]model.Ingredient, error) {
 	var opts *options.FindOptions
 	if sort == 1 || sort == -1 {
 		opts = options.Find().SetLimit(int64(limit)).SetSkip(int64(start)).SetSort(bson.D{{Key: "name", Value: sort}})
@@ -116,7 +116,7 @@ func (r *IngredientsRepository) GetInterval(limit int, start int, sort int) ([]d
 	return r.dataSource.Find(bson.D{}, opts)
 }
 
-func (r *IngredientsRepository) GetByName(name string) ([]domain.Ingredient, error) {
+func (r *IngredientsRepository) GetByName(name string) ([]model.Ingredient, error) {
 	return r.dataSource.Find(bson.D{{
 		Key: "$text",
 		Value: bson.D{{

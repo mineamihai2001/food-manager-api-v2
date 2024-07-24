@@ -1,37 +1,28 @@
 package controllers
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	api_error "github.com/mineamihai2001/fm/internal/api/api-error"
 	"github.com/mineamihai2001/fm/internal/api/dtos"
 	"github.com/mineamihai2001/fm/internal/api/middleware"
+	domain "github.com/mineamihai2001/fm/internal/domain/services"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services"
-	"github.com/mineamihai2001/fm/internal/infrastructure/services/dishes"
 )
 
 type DishesController struct {
-	context       context.Context
-	cancelContext context.CancelFunc
-	dishesService *dishes.DishesService
+	dishesService domain.IDishesService
 }
 
-func NewDishesController() *DishesController {
+func NewDishesController(dishesService domain.IDishesService) *DishesController {
 	c := &DishesController{
-		dishesService: dishes.New(),
+		dishesService,
 	}
 
-	c.context, c.cancelContext = c.createContext()
 	return c
-}
-
-func (c *DishesController) createContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 10*time.Second)
 }
 
 func (c *DishesController) Create(ctx *gin.Context) {
@@ -84,28 +75,6 @@ func (c *DishesController) GetById(ctx *gin.Context) {
 	}
 
 	res, err := c.dishesService.GetById(id)
-	if err != nil {
-		ctx.JSON(
-			err.(*services.ServiceError).HttpStatus(),
-			api_error.New(err.(*services.ServiceError).HttpStatus(), err),
-		)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, res)
-}
-
-func (c *DishesController) GetDetailsById(ctx *gin.Context) {
-	id := ctx.Param("id")
-	if id == "" {
-		ctx.JSON(
-			http.StatusBadRequest,
-			api_error.New(http.StatusBadRequest, errors.New("missing id param")),
-		)
-		return
-	}
-
-	res, err := c.dishesService.GetDetailsById(id)
 	if err != nil {
 		ctx.JSON(
 			err.(*services.ServiceError).HttpStatus(),
@@ -201,29 +170,6 @@ func (c *DishesController) GetByIngredientIds(ctx *gin.Context) {
 	}
 
 	res, err := c.dishesService.GetByIngredientIds(body.IngredientIds)
-
-	if err != nil {
-		ctx.JSON(
-			err.(*services.ServiceError).HttpStatus(),
-			api_error.New(err.(*services.ServiceError).HttpStatus(), err),
-		)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, res)
-}
-
-func (c *DishesController) GetDetailsByIngredientIds(ctx *gin.Context) {
-	body, err := middleware.Body[dtos.GetDishesByIngredientsDto](ctx)
-	if err != nil {
-		ctx.JSON(
-			http.StatusBadRequest,
-			api_error.New(http.StatusBadRequest, err),
-		)
-		return
-	}
-
-	res, err := c.dishesService.GetDetailsByIngredientIds(body.IngredientIds)
 
 	if err != nil {
 		ctx.JSON(

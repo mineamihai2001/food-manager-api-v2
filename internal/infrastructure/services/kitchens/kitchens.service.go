@@ -1,48 +1,48 @@
 package kitchens
 
 import (
-	"github.com/mineamihai2001/fm/internal/domain"
-	"github.com/mineamihai2001/fm/internal/infrastructure/repository"
+	"github.com/mineamihai2001/fm/internal/domain/model"
+	"github.com/mineamihai2001/fm/internal/domain/repo"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services"
 )
 
 type KitchensService struct {
-	repository *repository.KitchensRepository
+	repository repo.IKitchensRepository
 }
 
-func New() *KitchensService {
+func NewKitchensService(repository repo.IKitchensRepository) *KitchensService {
 	return &KitchensService{
-		repository: repository.NewKitchensRepository(),
+		repository,
 	}
 }
 
-func (s *KitchensService) Create(name string) (*domain.Kitchen, error) {
-	res, err := s.repository.Create(domain.NewKitchen(name))
+func (s *KitchensService) Create(name string) (*model.Kitchen, error) {
+	res, err := s.repository.Create(model.NewKitchen(name))
 
 	if err != nil {
-		return &domain.Kitchen{},
+		return &model.Kitchen{},
 			services.NewServiceError(services.InternalServerError, err.Error())
 	}
 
 	return &res, nil
 }
 
-func (s *KitchensService) GetById(id string) (*domain.Kitchen, error) {
+func (s *KitchensService) GetById(id string) (*model.Kitchen, error) {
 	res, err := s.repository.GetById(id)
 
 	if err != nil {
-		return &domain.Kitchen{},
+		return &model.Kitchen{},
 			services.NewServiceError(services.InternalServerError, err.Error())
 	}
 
 	return &res, nil
 }
 
-func (s *KitchensService) GetAll() (*[]domain.Kitchen, error) {
+func (s *KitchensService) GetAll() (*[]model.Kitchen, error) {
 	res, err := s.repository.GetAll()
 
 	if err != nil {
-		return &[]domain.Kitchen{},
+		return &[]model.Kitchen{},
 			services.NewServiceError(services.InternalServerError, err.Error())
 	}
 

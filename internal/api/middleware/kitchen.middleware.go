@@ -6,12 +6,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	api_error "github.com/mineamihai2001/fm/internal/api/api-error"
+	"github.com/mineamihai2001/fm/internal/infrastructure/repository"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services/kitchens"
 )
 
 func Kitchen(ctx *gin.Context) {
 	// validate if kitchen exists
-	service := kitchens.New()
+	service := kitchens.NewKitchensService(repository.NewKitchensRepository())
 	kitchen, err := service.GetById(ctx.Param("kitchenId"))
 
 	if err != nil {

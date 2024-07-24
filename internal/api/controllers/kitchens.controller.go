@@ -1,36 +1,27 @@
 package controllers
 
 import (
-	"context"
 	"errors"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	api_error "github.com/mineamihai2001/fm/internal/api/api-error"
 	"github.com/mineamihai2001/fm/internal/api/dtos"
 	"github.com/mineamihai2001/fm/internal/api/middleware"
+	domain "github.com/mineamihai2001/fm/internal/domain/services"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services"
-	"github.com/mineamihai2001/fm/internal/infrastructure/services/kitchens"
 )
 
 type KitchensController struct {
-	context         context.Context
-	cancelContext   context.CancelFunc
-	kitchensService *kitchens.KitchensService
+	kitchensService domain.IKitchensService
 }
 
-func NewKitchensController() *KitchensController {
+func NewKitchensController(kitchensService domain.IKitchensService) *KitchensController {
 	c := &KitchensController{
-		kitchensService: kitchens.New(),
+		kitchensService,
 	}
 
-	c.context, c.cancelContext = c.createContext()
 	return c
-}
-
-func (c *KitchensController) createContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 10*time.Second)
 }
 
 func (c *KitchensController) Create(ctx *gin.Context) {

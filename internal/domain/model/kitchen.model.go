@@ -1,4 +1,4 @@
-package domain
+package model
 
 type Kitchen struct {
 	Id   string `bson:"_id,omitempty" json:"id"`

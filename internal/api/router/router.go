@@ -4,16 +4,22 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mineamihai2001/fm/internal/api/controllers"
 	"github.com/mineamihai2001/fm/internal/api/middleware"
+	"github.com/mineamihai2001/fm/internal/infrastructure/repository"
+	"github.com/mineamihai2001/fm/internal/infrastructure/services/dishes"
+	"github.com/mineamihai2001/fm/internal/infrastructure/services/ingredients"
+	"github.com/mineamihai2001/fm/internal/infrastructure/services/kitchens"
 	"github.com/mineamihai2001/fm/pkg/tracing"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 func Create() *gin.Engine {
 	app := gin.Default()
+
 	// auto instrument requests
 	app.Use(otelgin.Middleware("fm-v2-api", otelgin.WithFilter(tracing.IgnorePaths)))
 	app.Use(middleware.RequestIdMiddleware)
 
+	// global application prefix
 	v1 := app.Group("/v1")
 
 	gen := v1.Group("/")
@@ -26,7 +32,9 @@ func Create() *gin.Engine {
 	{
 		ingredientsRouter.Use(middleware.Kitchen)
 
-		ingredientsController := controllers.NewIngredientsController()
+		ingredientsController := controllers.NewIngredientsController(
+			ingredients.NewIngredientsService(repository.NewIngredientsRepository()),
+		)
 
 		ingredientsRouter.GET("/:kitchenId", ingredientsController.GetAll)
 		ingredientsRouter.POST("/:kitchenId", ingredientsController.Create)
@@ -40,7 +48,9 @@ func Create() *gin.Engine {
 
 	kitchensRouter := v1.Group("/kitchens")
 	{
-		kitchensController := controllers.NewKitchensController()
+		kitchensController := controllers.NewKitchensController(
+			kitchens.NewKitchensService(repository.NewKitchensRepository()),
+		)
 
 		kitchensRouter.POST("/", kitchensController.Create)
 		kitchensRouter.GET("/", kitchensController.GetAll)
@@ -51,9 +61,13 @@ func Create() *gin.Engine {
 	dishesRouter := v1.Group("/dishes")
 	{
 		dishesRouter.Use(middleware.Kitchen)
-		// d.Use(middleware.DishDetails(:kitchenId))
 
-		dishesController := controllers.NewDishesController()
+		dishesController := controllers.NewDishesController(
+			dishes.NewDishesService(
+				repository.NewDishesRepository(),
+				repository.NewKitchensRepository(),
+				repository.NewIngredientsRepository(),
+			))
 
 		dishesRouter.POST("/:kitchenId", dishesController.Create)
 		dishesRouter.GET("/:kitchenId", dishesController.GetAll)
@@ -61,9 +75,7 @@ func Create() *gin.Engine {
 		dishesRouter.GET("/:kitchenId/:id", dishesController.GetById)
 		dishesRouter.DELETE("/:kitchenId/:id", dishesController.Delete)
 		dishesRouter.GET("/:kitchenId/query", dishesController.GetPage)
-		dishesRouter.GET("/:kitchenId/details/:id", dishesController.GetDetailsById)
 		dishesRouter.POST("/:kitchenId/ingredients", dishesController.GetByIngredientIds)
-		dishesRouter.POST("/:kitchenId/ingredients/details", dishesController.GetDetailsByIngredientIds)
 	}
 
 	return app

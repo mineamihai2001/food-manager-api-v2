@@ -1,37 +1,28 @@
 package controllers
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	api_error "github.com/mineamihai2001/fm/internal/api/api-error"
 	"github.com/mineamihai2001/fm/internal/api/dtos"
 	"github.com/mineamihai2001/fm/internal/api/middleware"
+	domain "github.com/mineamihai2001/fm/internal/domain/services"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services"
-	"github.com/mineamihai2001/fm/internal/infrastructure/services/ingredients"
 )
 
 type IngredientsController struct {
-	context            context.Context
-	cancelContext      context.CancelFunc
-	ingredientsService *ingredients.IngredientsService
+	ingredientsService domain.IIngredientsServices
 }
 
-func NewIngredientsController() *IngredientsController {
+func NewIngredientsController(ingredientsService domain.IIngredientsServices) *IngredientsController {
 	c := &IngredientsController{
-		ingredientsService: ingredients.New(),
+		ingredientsService,
 	}
 
-	c.context, c.cancelContext = c.createContext()
 	return c
-}
-
-func (c *IngredientsController) createContext() (context.Context, context.CancelFunc) {
-	return context.WithTimeout(context.Background(), 10*time.Second)
 }
 
 func (c *IngredientsController) Create(ctx *gin.Context) {

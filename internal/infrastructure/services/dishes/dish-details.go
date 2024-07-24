@@ -1,6 +1,6 @@
 package dishes
 
-import "github.com/mineamihai2001/fm/internal/domain"
+import domain "github.com/mineamihai2001/fm/internal/domain/model"
 
 type DishDetails struct {
 	Id          string              `bson:"_id,omitempty" json:"id"`
