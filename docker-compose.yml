@@ -1,26 +1,90 @@
 version: 0.0.1
-name: fm_v2
+name: fm-v2-api
+volumes:
+    rmqdata:
+        driver: local
+    esdata:
+        driver: local
 services:
     api:
         build:
             context: .
             dockerfile: ./deployments/Dockerfile
             target: base
-        container_name: fm_v2
+        container_name: fm-v2-api
         working_dir: /app
         volumes:
             - .:/app
         environment:
             - APP_PORT=$APP_PORT
         ports:
-            - "8888:${APP_PORT}"
+            - "8888:8888"
         env_file:
             - .env
     mongodb:
-      image: mongo:latest
-      env_file:
-        - .env
-      environment:
-        - DB_PORT=$DB_PORT
-      ports:
-        - "27017:${DB_PORT}"
+        image: mongo:latest
+        container_name: fm-v2-mongo
+        env_file:
+            - .env
+        environment:
+            - DB_PORT=$DB_PORT
+        ports:
+            - "27017:27017"
+    jaeger:
+        image: jaegertracing/all-in-one:latest
+        container_name: fm-v2-jaeger
+        ports:
+            - "16686:16686"
+            - "4318:4318"
+        environment:
+            - LOG_LEVEL=error
+    rabbitmq:
+        image: rabbitmq:3.10.5
+        container_name: fm-v2-rabbitmq
+        volumes:
+            - rmqdata:/var/lib/rabbitmq
+            - ./deployments/rabbitmq/rabbitmq.config:/etc/rabbitmq/rabbitmq.config:ro
+            - ./deployments/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+            - ./deployments/rabbitmq/rabbitmq-defs.json:/etc/rabbitmq/rabbitmq-defs.json
+        ports:
+            - "5672:5672"
+            - "15672:15672"
+    logstash:
+        image: logstash:8.7.0
+        container_name: fm-v2-logstash
+        volumes:
+            - ./deployments/logstash/rabbitmq.conf:/etc/logstash/conf.d/logstash-rabbitmq.conf
+        command: logstash -f /etc/logstash/conf.d/logstash-rabbitmq.conf
+        depends_on:
+            - rabbitmq
+            - elasticsearch
+
+    elasticsearch:
+        image: elasticsearch:8.7.0
+        container_name: fm-v2-elasticsearch
+        environment:
+            - cluster.name=logs-cluster
+            - discovery.type=single-node
+            - http.host=0.0.0.0
+            - transport.host=127.0.0.1
+            - ES_JAVA_OPTS=-Xms512m -Xmx512m
+            - xpack.security.enabled=false
+        volumes:
+            - esdata:/usr/share/elasticsearch/data
+        healthcheck:
+            test: curl -s http://localhost:9200 >/dev/null || exit 1
+            interval: 30s
+            timeout: 10s
+            retries: 50
+        command: ["elasticsearch", "-Elogger.level=WARN"]
+
+    kibana:
+        image: kibana:8.7.0
+        container_name: fm-v2-kibana
+        ports:
+            - "5601:5601"
+        environment:
+            - ELASTICSEARCH_HOSTS=http://fm-v2-elasticsearch:9200
+            - LOGGING_QUIET=false
+        depends_on:
+            - elasticsearch
