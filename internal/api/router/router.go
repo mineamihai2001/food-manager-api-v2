@@ -1,0 +1,102 @@
+package router
+
+import (
+	"github.com/gin-gonic/gin"
+	"github.com/mineamihai2001/fm/internal/api/controllers"
+	"github.com/mineamihai2001/fm/internal/api/middleware"
+	"github.com/mineamihai2001/fm/internal/infrastructure/repository"
+	"github.com/mineamihai2001/fm/internal/infrastructure/services/dish_ingredient"
+	"github.com/mineamihai2001/fm/internal/infrastructure/services/dishes"
+	"github.com/mineamihai2001/fm/internal/infrastructure/services/ingredients"
+	"github.com/mineamihai2001/fm/internal/infrastructure/services/kitchens"
+	"github.com/mineamihai2001/fm/pkg/tracing"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
+)
+
+func Create() *gin.Engine {
+	app := gin.Default()
+
+	// auto instrument requests
+	app.Use(otelgin.Middleware("fm-v2-api", otelgin.WithFilter(tracing.IgnorePaths)))
+	app.Use(middleware.RequestIdMiddleware)
+
+	// global application prefix
+	v1 := app.Group("/v1")
+
+	gen := v1.Group("/")
+	{
+		pingController := controllers.NewPingController()
+		gen.GET("/ping", pingController.Ping)
+	}
+
+	ingredientsRouter := v1.Group("/ingredients")
+	{
+		ingredientsRouter.Use(middleware.Kitchen)
+
+		ingredientsController := controllers.NewIngredientsController(
+			ingredients.NewIngredientsService(repository.NewIngredientsRepository()),
+		)
+
+		ingredientsRouter.GET("/:kitchenId", ingredientsController.GetAll)
+		ingredientsRouter.POST("/:kitchenId", ingredientsController.Create)
+		ingredientsRouter.DELETE("/:kitchenId", ingredientsController.DeleteMany)
+		ingredientsRouter.GET("/:kitchenId/:id", ingredientsController.GetById)
+		ingredientsRouter.DELETE("/:kitchenId/:id", ingredientsController.Delete)
+		ingredientsRouter.GET("/:kitchenId/query", ingredientsController.GetPage)
+		ingredientsRouter.POST("/:kitchenId/query", ingredientsController.GetManyById)
+		ingredientsRouter.GET("/:kitchenId/search", ingredientsController.GetByName)
+		ingredientsRouter.POST("/:kitchenId/batch", ingredientsController.CreateMany)
+	}
+
+	kitchensRouter := v1.Group("/kitchens")
+	{
+		kitchensController := controllers.NewKitchensController(
+			kitchens.NewKitchensService(repository.NewKitchensRepository()),
+		)
+
+		kitchensRouter.POST("/", kitchensController.Create)
+		kitchensRouter.GET("/", kitchensController.GetAll)
+		kitchensRouter.GET("/:id", kitchensController.GetById)
+		kitchensRouter.DELETE("/:id", kitchensController.Delete)
+	}
+
+	dishesRouter := v1.Group("/dishes")
+	{
+		dishesRouter.Use(middleware.Kitchen)
+
+		dishesController := controllers.NewDishesController(
+			dishes.NewDishesService(
+				repository.NewDishesRepository(),
+				repository.NewKitchensRepository(),
+				repository.NewIngredientsRepository(),
+				repository.NewDishIngredientRepository(),
+			))
+
+		dishesRouter.POST("/:kitchenId", dishesController.Create)
+		dishesRouter.GET("/:kitchenId", dishesController.GetAll)
+		dishesRouter.GET("/:kitchenId/random", dishesController.GetRandom)
+		dishesRouter.GET("/:kitchenId/:id", dishesController.GetById)
+		dishesRouter.DELETE("/:kitchenId/:id", dishesController.Delete)
+		dishesRouter.GET("/:kitchenId/query", dishesController.GetPage)
+	}
+
+	dishIngredientsRouter := v1.Group(("/dishIngredient"))
+	{
+		dishIngredientController := controllers.NewDishIngredientController(
+			dish_ingredient.NewDishIngredientService(
+				repository.NewDishIngredientRepository(),
+				repository.NewDishesRepository(),
+				repository.NewIngredientsRepository(),
+			),
+		)
+
+		dishIngredientsRouter.POST("/", dishIngredientController.Create)
+		dishIngredientsRouter.GET("/:id", dishIngredientController.GetById)
+		dishIngredientsRouter.GET("/dishes/:id", dishIngredientController.GetByDishId)
+		dishIngredientsRouter.GET("/ingredients/:id", dishIngredientController.GetByIngredientId)
+		dishIngredientsRouter.DELETE("/:id", dishIngredientController.Delete)
+
+	}
+
+	return app
+}
