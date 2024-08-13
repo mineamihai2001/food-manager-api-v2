@@ -5,6 +5,7 @@ import (
 	"github.com/mineamihai2001/fm/internal/api/controllers"
 	"github.com/mineamihai2001/fm/internal/api/middleware"
 	"github.com/mineamihai2001/fm/internal/infrastructure/repository"
+	"github.com/mineamihai2001/fm/internal/infrastructure/services/dish_ingredient"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services/dishes"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services/ingredients"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services/kitchens"
@@ -42,7 +43,8 @@ func Create() *gin.Engine {
 		ingredientsRouter.GET("/:kitchenId/:id", ingredientsController.GetById)
 		ingredientsRouter.DELETE("/:kitchenId/:id", ingredientsController.Delete)
 		ingredientsRouter.GET("/:kitchenId/query", ingredientsController.GetPage)
-		ingredientsRouter.POST("/:kitchenId/query", ingredientsController.GetByName)
+		ingredientsRouter.POST("/:kitchenId/query", ingredientsController.GetManyById)
+		ingredientsRouter.GET("/:kitchenId/search", ingredientsController.GetByName)
 		ingredientsRouter.POST("/:kitchenId/batch", ingredientsController.CreateMany)
 	}
 
@@ -67,6 +69,7 @@ func Create() *gin.Engine {
 				repository.NewDishesRepository(),
 				repository.NewKitchensRepository(),
 				repository.NewIngredientsRepository(),
+				repository.NewDishIngredientRepository(),
 			))
 
 		dishesRouter.POST("/:kitchenId", dishesController.Create)
@@ -75,7 +78,24 @@ func Create() *gin.Engine {
 		dishesRouter.GET("/:kitchenId/:id", dishesController.GetById)
 		dishesRouter.DELETE("/:kitchenId/:id", dishesController.Delete)
 		dishesRouter.GET("/:kitchenId/query", dishesController.GetPage)
-		dishesRouter.POST("/:kitchenId/ingredients", dishesController.GetByIngredientIds)
+	}
+
+	dishIngredientsRouter := v1.Group(("/dishIngredient"))
+	{
+		dishIngredientController := controllers.NewDishIngredientController(
+			dish_ingredient.NewDishIngredientService(
+				repository.NewDishIngredientRepository(),
+				repository.NewDishesRepository(),
+				repository.NewIngredientsRepository(),
+			),
+		)
+
+		dishIngredientsRouter.POST("/", dishIngredientController.Create)
+		dishIngredientsRouter.GET("/:id", dishIngredientController.GetById)
+		dishIngredientsRouter.GET("/dishes/:id", dishIngredientController.GetByDishId)
+		dishIngredientsRouter.GET("/ingredients/:id", dishIngredientController.GetByIngredientId)
+		dishIngredientsRouter.DELETE("/:id", dishIngredientController.Delete)
+
 	}
 
 	return app

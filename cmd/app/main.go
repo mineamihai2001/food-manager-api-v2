@@ -16,19 +16,26 @@ import (
 func main() {
 	env := helpers.Env()
 
-	logger.Init(
-		opentelemetry.GetTraceId,
-		amqp.
-			NewClient(amqp.ClientConfig{
-				Protocol: env.Log.Writer.Protocol,
-				Host:     env.Log.Writer.Host,
-				User:     env.Log.Writer.User,
-				Password: env.Log.Writer.Password,
-				Port:     env.Log.Writer.Port,
-				VHost:    env.Log.Writer.VHost,
-			}).
-			RegisterQueue(env.Log.Writer.Queue),
-	)
+	amqpClient, err := amqp.
+		NewClient(amqp.ClientConfig{
+			Protocol: env.Log.Writer.Protocol,
+			Host:     env.Log.Writer.Host,
+			User:     env.Log.Writer.User,
+			Password: env.Log.Writer.Password,
+			Port:     env.Log.Writer.Port,
+			VHost:    env.Log.Writer.VHost,
+		})
+
+	if err != nil {
+		logger.Init(opentelemetry.GetTraceId)
+	} else {
+		defer amqpClient.Conn().Close()
+
+		logger.Init(
+			opentelemetry.GetTraceId,
+			amqpClient.RegisterQueue(env.Log.Writer.Queue),
+		)
+	}
 
 	tracer := tracing.Init()
 	defer func() {

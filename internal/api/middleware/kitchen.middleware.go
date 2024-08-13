@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	api_error "github.com/mineamihai2001/fm/internal/api/api-error"
+	api_error "github.com/mineamihai2001/fm/internal/api/api_error"
 	"github.com/mineamihai2001/fm/internal/infrastructure/repository"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services/kitchens"
 )

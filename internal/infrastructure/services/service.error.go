@@ -2,7 +2,7 @@ package services
 
 import (
 	"fmt"
-	"strconv"
+	"net/http"
 )
 
 type ServiceError struct {
@@ -15,14 +15,20 @@ func (e *ServiceError) Error() string {
 }
 
 func (e *ServiceError) HttpStatus() int {
-	hex := fmt.Sprintf("%X", e.ErrorCode)[0:3]
-
-	value, err := strconv.ParseInt(hex, 16, 16)
-	if err != nil {
-		return 500
+	errorCodeMap := map[int]int{
+		Conflict:            http.StatusConflict,
+		DocumentNotFound:    http.StatusNotFound,
+		EndpointNotFound:    http.StatusNotFound,
+		InternalServerError: http.StatusInternalServerError,
+		NotModified:         http.StatusNotModified,
 	}
 
-	return int(value)
+	httpCode, ok := errorCodeMap[e.ErrorCode]
+	if !ok {
+		return http.StatusInternalServerError
+	}
+
+	return httpCode
 }
 
 func (e *ServiceError) StringErrorCode() string {
@@ -41,4 +47,6 @@ const (
 	EndpointNotFound    = 0x190002
 	InternalServerError = 0x1F4001
 	RepositoryError     = 0x1F4002
+	Conflict            = 0x1F4009
+	NotModified         = 0x1F3004
 )

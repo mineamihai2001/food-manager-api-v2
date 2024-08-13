@@ -23,12 +23,13 @@ type ClientConfig struct {
 	VHost    string
 }
 
-func NewClient(config ClientConfig) *Client {
+func NewClient(config ClientConfig) (*Client, error) {
 	uri := fmt.Sprintf("%s://%s:%s@%s:%d%s", config.Protocol, config.User, config.Password, config.Host, config.Port, config.VHost)
 
 	conn, err := amqp.Dial(uri)
 	if err != nil {
-		log.Fatal("Failed to connect to RabbitMQ", err)
+		log.Println("Failed to connect to RabbitMQ", err)
+		return nil, err
 	}
 
 	client := &Client{
@@ -37,7 +38,11 @@ func NewClient(config ClientConfig) *Client {
 
 	client.channel = client.CreateChannel()
 
-	return client
+	return client, nil
+}
+
+func (a *Client) Conn() *amqp.Connection {
+	return a.conn
 }
 
 func (a *Client) CreateChannel() *amqp.Channel {

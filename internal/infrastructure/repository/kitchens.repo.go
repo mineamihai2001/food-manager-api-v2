@@ -3,40 +3,42 @@ package repository
 import (
 	"context"
 
-	"github.com/mineamihai2001/fm/internal/domain/model"
+	"github.com/mineamihai2001/fm/internal/domain/entity"
+	"github.com/mineamihai2001/fm/internal/helpers"
 	"github.com/mineamihai2001/fm/internal/infrastructure/mongo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type KitchensRepository struct {
-	dataSource *mongo.Collection[model.Kitchen]
+	dataSource *mongo.Collection[entity.Kitchen]
 }
 
 func NewKitchensRepository() *KitchensRepository {
-	client := mongo.GetInstance("fm", context.Background())
+	env := helpers.Env()
+	client := mongo.GetInstance(env.Db.Database, context.Background())
 
 	return &KitchensRepository{
-		dataSource: mongo.GetCollection[model.Kitchen](client, "kitchens"),
+		dataSource: mongo.GetCollection[entity.Kitchen](client, "kitchens"),
 	}
 }
 
-func (r *KitchensRepository) GetById(id string) (model.Kitchen, error) {
+func (r *KitchensRepository) GetById(id string) (entity.Kitchen, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return model.Kitchen{}, err
+		return entity.Kitchen{}, err
 	}
 	return r.dataSource.FindOne(bson.D{{Key: "_id", Value: objectId}})
 }
 
-func (r *KitchensRepository) GetAll() ([]model.Kitchen, error) {
+func (r *KitchensRepository) GetAll() ([]entity.Kitchen, error) {
 	return r.dataSource.Find(bson.D{})
 }
 
-func (r *KitchensRepository) Create(i model.Kitchen) (model.Kitchen, error) {
+func (r *KitchensRepository) Create(i entity.Kitchen) (entity.Kitchen, error) {
 	res, err := r.dataSource.InsertOne(i)
 	if err != nil {
-		return model.Kitchen{}, err
+		return entity.Kitchen{}, err
 	}
 
 	created := i

@@ -85,3 +85,7 @@ func (coll *Collection[T]) Aggregate(pipeline interface{}, opts ...*options.Aggr
 
 	return result, nil
 }
+
+func (coll *Collection[T]) CountDocuments(filter interface{}, opts ...*options.CountOptions) (int64, error) {
+	return coll.collection.CountDocuments(coll.ctx, filter, opts...)
+}

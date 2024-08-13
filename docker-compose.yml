@@ -21,6 +21,8 @@ services:
             - "8888:8888"
         env_file:
             - .env
+        depends_on:
+            - rabbitmq
     mongodb:
         image: mongo:latest
         container_name: fm-v2-mongo

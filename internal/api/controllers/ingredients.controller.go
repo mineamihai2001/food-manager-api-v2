@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	api_error "github.com/mineamihai2001/fm/internal/api/api-error"
+	api_error "github.com/mineamihai2001/fm/internal/api/api_error"
 	"github.com/mineamihai2001/fm/internal/api/dtos"
 	"github.com/mineamihai2001/fm/internal/api/middleware"
 	domain "github.com/mineamihai2001/fm/internal/domain/services"
@@ -150,7 +150,14 @@ func (c *IngredientsController) DeleteMany(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	var statusCode int
+	if res != 0 {
+		statusCode = http.StatusOK
+	} else {
+		statusCode = http.StatusNotModified
+	}
+
+	ctx.JSON(statusCode, gin.H{
 		"deleted": res,
 	})
 }
@@ -187,11 +194,11 @@ func (c *IngredientsController) GetPage(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, dtos.NewGetIngredientsPageResponseDto(page, sort, pageSize, res))
 }
 
 func (c *IngredientsController) GetByName(ctx *gin.Context) {
-	query, err := middleware.Body[dtos.GetIngredientsNameDto](ctx)
+	query, err := middleware.Query[dtos.GetIngredientsNameDto](ctx)
 	if err != nil {
 		ctx.JSON(
 			http.StatusBadRequest,
@@ -201,6 +208,29 @@ func (c *IngredientsController) GetByName(ctx *gin.Context) {
 	}
 
 	res, err := c.ingredientsService.GetByName(query.Name)
+
+	if err != nil {
+		ctx.JSON(
+			err.(*services.ServiceError).HttpStatus(),
+			api_error.New(err.(*services.ServiceError).HttpStatus(), err),
+		)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *IngredientsController) GetManyById(ctx *gin.Context) {
+	body, err := middleware.Body[dtos.GetManyIngredientsByIdDto](ctx)
+	if err != nil {
+		ctx.JSON(
+			http.StatusBadRequest,
+			api_error.New(http.StatusBadRequest, err),
+		)
+		return
+	}
+
+	res, err := c.ingredientsService.GetManyById(body.Ids)
 
 	if err != nil {
 		ctx.JSON(

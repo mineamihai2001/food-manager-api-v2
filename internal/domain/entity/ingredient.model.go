@@ -1,4 +1,4 @@
-package model
+package entity
 
 type Ingredient struct {
 	Id   string `bson:"_id,omitempty" json:"id"`

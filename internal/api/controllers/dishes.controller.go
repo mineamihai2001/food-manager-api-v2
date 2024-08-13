@@ -6,9 +6,10 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	api_error "github.com/mineamihai2001/fm/internal/api/api-error"
+	api_error "github.com/mineamihai2001/fm/internal/api/api_error"
 	"github.com/mineamihai2001/fm/internal/api/dtos"
 	"github.com/mineamihai2001/fm/internal/api/middleware"
+	"github.com/mineamihai2001/fm/internal/domain/model"
 	domain "github.com/mineamihai2001/fm/internal/domain/services"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services"
 )
@@ -35,9 +36,22 @@ func (c *DishesController) Create(ctx *gin.Context) {
 		return
 	}
 
-	kitchenId := ctx.Param("kitchenId")
+	kitchenId := ctx.GetString("kitchenId")
 
-	res, err := c.dishesService.Create(kitchenId, body.Name, body.IngredientIds, *body.Duration, *body.Rating, body.Images)
+	var ingredientParts = make([]model.IngredientPart, 0)
+	for _, i := range body.Ingredients {
+		ingredientParts = append(ingredientParts, model.NewIngredientPart(i.Id, i.Unit, *i.Size))
+	}
+
+	res, err := c.dishesService.Create(
+		kitchenId,
+		body.Name,
+		*body.Duration,
+		*body.Rating,
+		body.Images,
+		body.Steps,
+		ingredientParts,
+	)
 
 	if err != nil {
 		ctx.JSON(
@@ -119,7 +133,14 @@ func (c *DishesController) Delete(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
+	var status int
+	if res {
+		status = http.StatusOK
+	} else {
+		status = http.StatusNotModified
+	}
+
+	ctx.JSON(status, gin.H{
 		"deleted": res,
 	})
 }
@@ -156,28 +177,5 @@ func (c *DishesController) GetPage(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, res)
-}
-
-func (c *DishesController) GetByIngredientIds(ctx *gin.Context) {
-	body, err := middleware.Body[dtos.GetDishesByIngredientsDto](ctx)
-	if err != nil {
-		ctx.JSON(
-			http.StatusBadRequest,
-			api_error.New(http.StatusBadRequest, err),
-		)
-		return
-	}
-
-	res, err := c.dishesService.GetByIngredientIds(body.IngredientIds)
-
-	if err != nil {
-		ctx.JSON(
-			err.(*services.ServiceError).HttpStatus(),
-			api_error.New(err.(*services.ServiceError).HttpStatus(), err),
-		)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, dtos.NewGetDishesPageResponseDto(page, sort, pageSize, res))
 }

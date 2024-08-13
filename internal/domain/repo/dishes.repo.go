@@ -1,13 +1,12 @@
 package repo
 
-import "github.com/mineamihai2001/fm/internal/domain/model"
+import "github.com/mineamihai2001/fm/internal/domain/entity"
 
 type IDishesRepository interface {
-	GetById(id string) (model.Dish, error)
-	GetAll(kitchenId string) ([]model.Dish, error)
-	Create(d model.Dish) (model.Dish, error)
+	GetById(id string) (entity.Dish, error)
+	GetAll(kitchenId string) ([]entity.Dish, error)
+	Create(d entity.Dish) (entity.Dish, error)
 	Delete(id string) (bool, error)
-	GetRandom(kitchenId string) (model.Dish, error)
-	GetInterval(limit int, start int, sort int, kitchenId string) ([]model.Dish, error)
-	GetByIngredientIds(ingredientIds []string) ([]model.Dish, error)
+	GetRandom(kitchenId string) (entity.Dish, error)
+	GetInterval(limit int, start int, sort int, kitchenId string) ([]entity.Dish, error)
 }

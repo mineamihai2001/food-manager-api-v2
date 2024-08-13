@@ -1,15 +1,15 @@
 package services
 
-import "github.com/mineamihai2001/fm/internal/domain/model"
+import "github.com/mineamihai2001/fm/internal/domain/entity"
 
 type IIngredientsServices interface {
-	Create(name string) (*model.Ingredient, error)
-	CreateMany(names []string) ([]model.Ingredient, error)
-	GetById(id string) (*model.Ingredient, error)
-	GetManyById(ids []string) ([]model.Ingredient, error)
-	GetAll() ([]model.Ingredient, error)
+	Create(name string) (*entity.Ingredient, error)
+	CreateMany(names []string) ([]entity.Ingredient, error)
+	GetById(id string) (*entity.Ingredient, error)
+	GetManyById(ids []string) ([]entity.Ingredient, error)
+	GetAll() ([]entity.Ingredient, error)
 	Delete(id string) (bool, error)
 	DeleteMany(ids []string) (int, error)
-	GetPage(page int, pageSize int, sort int) ([]model.Ingredient, error)
-	GetByName(name string) ([]model.Ingredient, error)
+	GetPage(page int, pageSize int, sort int) ([]entity.Ingredient, error)
+	GetByName(name string) ([]entity.Ingredient, error)
 }

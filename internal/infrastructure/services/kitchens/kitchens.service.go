@@ -1,7 +1,7 @@
 package kitchens
 
 import (
-	"github.com/mineamihai2001/fm/internal/domain/model"
+	"github.com/mineamihai2001/fm/internal/domain/entity"
 	"github.com/mineamihai2001/fm/internal/domain/repo"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services"
 )
@@ -16,33 +16,33 @@ func NewKitchensService(repository repo.IKitchensRepository) *KitchensService {
 	}
 }
 
-func (s *KitchensService) Create(name string) (*model.Kitchen, error) {
-	res, err := s.repository.Create(model.NewKitchen(name))
+func (s *KitchensService) Create(name string) (*entity.Kitchen, error) {
+	res, err := s.repository.Create(entity.NewKitchen(name))
 
 	if err != nil {
-		return &model.Kitchen{},
+		return &entity.Kitchen{},
 			services.NewServiceError(services.InternalServerError, err.Error())
 	}
 
 	return &res, nil
 }
 
-func (s *KitchensService) GetById(id string) (*model.Kitchen, error) {
+func (s *KitchensService) GetById(id string) (*entity.Kitchen, error) {
 	res, err := s.repository.GetById(id)
 
 	if err != nil {
-		return &model.Kitchen{},
+		return &entity.Kitchen{},
 			services.NewServiceError(services.InternalServerError, err.Error())
 	}
 
 	return &res, nil
 }
 
-func (s *KitchensService) GetAll() (*[]model.Kitchen, error) {
+func (s *KitchensService) GetAll() (*[]entity.Kitchen, error) {
 	res, err := s.repository.GetAll()
 
 	if err != nil {
-		return &[]model.Kitchen{},
+		return &[]entity.Kitchen{},
 			services.NewServiceError(services.InternalServerError, err.Error())
 	}
 

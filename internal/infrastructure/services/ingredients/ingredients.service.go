@@ -1,7 +1,9 @@
 package ingredients
 
 import (
-	"github.com/mineamihai2001/fm/internal/domain/model"
+	"strings"
+
+	"github.com/mineamihai2001/fm/internal/domain/entity"
 	"github.com/mineamihai2001/fm/internal/domain/repo"
 	"github.com/mineamihai2001/fm/internal/infrastructure/services"
 )
@@ -16,59 +18,59 @@ func NewIngredientsService(repo repo.IIngredientsRepository) *IngredientsService
 	}
 }
 
-func (s *IngredientsService) Create(name string) (*model.Ingredient, error) {
-	res, err := s.repository.Create(model.NewIngredient(name))
+func (s *IngredientsService) Create(name string) (*entity.Ingredient, error) {
+	res, err := s.repository.Create(entity.NewIngredient(strings.ToLower(name)))
 
 	if err != nil {
-		return &model.Ingredient{},
+		return &entity.Ingredient{},
 			services.NewServiceError(services.InternalServerError, err.Error())
 	}
 
 	return &res, nil
 }
 
-func (s *IngredientsService) CreateMany(names []string) ([]model.Ingredient, error) {
-	ingredients := make([]model.Ingredient, len(names))
+func (s *IngredientsService) CreateMany(names []string) ([]entity.Ingredient, error) {
+	ingredients := make([]entity.Ingredient, len(names))
 	for i, name := range names {
-		ingredients[i] = model.NewIngredient(name)
+		ingredients[i] = entity.NewIngredient(name)
 	}
 	res, err := s.repository.CreateMany(ingredients)
 
 	if err != nil {
-		return []model.Ingredient{},
+		return []entity.Ingredient{},
 			services.NewServiceError(services.InternalServerError, err.Error())
 	}
 
 	return res, nil
 }
 
-func (s *IngredientsService) GetById(id string) (*model.Ingredient, error) {
+func (s *IngredientsService) GetById(id string) (*entity.Ingredient, error) {
 	res, err := s.repository.GetById(id)
 
 	if err != nil {
-		return &model.Ingredient{},
+		return &entity.Ingredient{},
 			services.NewServiceError(services.InternalServerError, err.Error())
 	}
 
 	return &res, nil
 }
 
-func (s *IngredientsService) GetManyById(ids []string) ([]model.Ingredient, error) {
+func (s *IngredientsService) GetManyById(ids []string) ([]entity.Ingredient, error) {
 	res, err := s.repository.GetManyById(ids)
 
 	if err != nil {
-		return []model.Ingredient{},
+		return []entity.Ingredient{},
 			services.NewServiceError(services.DocumentNotFound, err.Error())
 	}
 
 	return res, nil
 }
 
-func (s *IngredientsService) GetAll() ([]model.Ingredient, error) {
+func (s *IngredientsService) GetAll() ([]entity.Ingredient, error) {
 	res, err := s.repository.GetAll()
 
 	if err != nil {
-		return []model.Ingredient{},
+		return []entity.Ingredient{},
 			services.NewServiceError(services.RepositoryError, err.Error())
 	}
 
@@ -97,7 +99,7 @@ func (s *IngredientsService) DeleteMany(ids []string) (int, error) {
 	return res, nil
 }
 
-func (s *IngredientsService) GetPage(page int, pageSize int, sort int) ([]model.Ingredient, error) {
+func (s *IngredientsService) GetPage(page int, pageSize int, sort int) ([]entity.Ingredient, error) {
 	maxPageSize := 100
 	if pageSize > maxPageSize {
 		pageSize = maxPageSize
@@ -106,17 +108,17 @@ func (s *IngredientsService) GetPage(page int, pageSize int, sort int) ([]model.
 	res, err := s.repository.GetInterval(pageSize, page*pageSize, sort)
 
 	if err != nil {
-		return []model.Ingredient{}, services.NewServiceError(services.RepositoryError, err.Error())
+		return []entity.Ingredient{}, services.NewServiceError(services.RepositoryError, err.Error())
 	}
 
 	return res, nil
 }
 
-func (s *IngredientsService) GetByName(name string) ([]model.Ingredient, error) {
+func (s *IngredientsService) GetByName(name string) ([]entity.Ingredient, error) {
 	res, err := s.repository.GetByName(name)
 
 	if err != nil {
-		return []model.Ingredient{}, services.NewServiceError(services.RepositoryError, err.Error())
+		return []entity.Ingredient{}, services.NewServiceError(services.RepositoryError, err.Error())
 	}
 
 	return res, nil

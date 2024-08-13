@@ -7,10 +7,10 @@ import (
 )
 
 type ApiError struct {
-	StatusCode        int    `json:"statusCode"`
-	Error             string `json:"error"`
-	Message           string `json:"message"`
-	InternalErrorCode string `json:"internalErrorCode"`
+	StatusCode int    `json:"statusCode"`
+	Error      string `json:"error"`
+	Message    string `json:"message"`
+	ErrorCode  string `json:"errorCode"`
 }
 
 func New(statusCode int, err error) ApiError {
@@ -24,9 +24,9 @@ func New(statusCode int, err error) ApiError {
 	}
 
 	return ApiError{
-		StatusCode:        statusCode,
-		Error:             http.StatusText(statusCode),
-		Message:           err.Error(),
-		InternalErrorCode: internalErrorCode,
+		StatusCode: statusCode,
+		Error:      http.StatusText(statusCode),
+		Message:    err.Error(),
+		ErrorCode:  internalErrorCode,
 	}
 }
